@@ -11,6 +11,9 @@ const Login = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Determine redirect URL dynamically based on environment
+  const redirectUrl = window.location.origin;
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -32,11 +35,9 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "http://localhost:5173" },
+      options: { redirectTo: redirectUrl },
     });
     if (oauthError) return setError(oauthError.message);
-
-    // Google login check handled in useEffect
   };
 
   useEffect(() => {
