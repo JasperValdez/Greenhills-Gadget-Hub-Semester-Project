@@ -1,118 +1,63 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase-client";
 import { Link } from "react-router-dom";
+import { Tag, Box, ShoppingCart } from "lucide-react"; // icons
 
-const categories = [
-  {
-    name: "Laptop",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    name: "Monitor",
-    image: "https://images.pexels.com/photos/572056/pexels-photo-572056.jpeg?auto=compress&cs=tinysrgb&w=400"
+function Products() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  },
-  {
-    name: "Phone",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    name: "Keyboard",
-    image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    name: "Headphones",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80",
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase.from("products").select("*");
+      if (error) console.error("Error fetching products:", error);
+      else setProducts(data);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
-  },
-  {
-    name: "Mouse",
-    image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80",
-  },
-];
+  if (loading) return <p className="text-center mt-10 text-xl animate-pulse">Loading products...</p>;
+  if (products.length === 0) return <p className="text-center mt-10 text-xl">No products found.</p>;
 
-const products = [
-  {
-    id: 1,
-    name: "iPhone 12 Pro",
-    price: "₱32,000",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 2,
-    name: "Samsung Galaxy S21",
-    price: "₱28,500",
-    image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 3,
-    name: "MacBook Air M1",
-    price: "₱45,000",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: 4,
-    name: "AirPods Pro",
-    price: "₱9,500",
-    image: "https://images.pexels.com/photos/373945/pexels-photo-373945.jpeg?auto=compress&cs=tinysrgb&w=400"
-  },
-];
-
-const Products = () => {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="mt-6">
 
-      {/* HERO */}
-      <div className="bg-green-600 text-white rounded-2xl p-12 mb-10 shadow-lg">
-        <h1 className="text-4xl font-extrabold mb-3">
-          Shop Quality Gadgets
-        </h1>
-        <p className="text-lg opacity-90">
-          Affordable, reliable, and quality-checked devices.
-        </p>
+      {/* Big Hero Container */}
+      <div className="max-w-7xl mx-auto bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-12 flex flex-col items-center text-center text-white animate-fadeIn">
+        <ShoppingCart size={64} className="mb-4 animate-bounce"/>
+        <h1 className="text-5xl font-bold mb-2 drop-shadow-lg">Our Latest Gadgets</h1>
+        <p className="text-xl text-white/90">Discover, explore, and shop the best tech products in our store!</p>
       </div>
 
-      {/* CATEGORIES */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-6 mb-14">
-        {categories.map((category, index) => (
+      {/* Products Grid */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6 mt-10">
+        {products.map((p) => (
           <div
-            key={index}
-            className="flex flex-col items-center cursor-pointer group"
+            key={p.id}
+            className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition duration-500 hover:scale-105 hover:-translate-y-1 hover:shadow-2xl flex flex-col"
           >
-            <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md border group-hover:scale-105 transition">
+            {p.image_url && (
               <img
-                src={category.image}
-                alt={category.name}
-                className="w-full h-full object-cover"
+                src={p.image_url}
+                alt={p.name}
+                className="h-48 w-full object-cover transition-transform duration-500 hover:scale-110"
               />
-            </div>
-            <p className="mt-3 font-semibold text-gray-700 group-hover:text-green-600 transition">
-              {category.name}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* PRODUCTS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="h-48 w-full object-cover"
-            />
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-800">
-                {product.name}
-              </h3>
-              <p className="text-green-600 font-bold mt-1">
-                {product.price}
-              </p>
+            )}
+            <div className="p-4 flex flex-col flex-1">
+              <h2 className="text-xl font-bold mb-2 text-gray-800">{p.name}</h2>
+              <p className="text-gray-600 mb-2 flex-1">{p.description}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Tag size={18} className="text-gray-500"/>
+                <span className="font-semibold text-gray-800">₱{parseFloat(p.price).toLocaleString("en-PH")}</span>
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <Box size={18} className="text-gray-500"/>
+                <span className="text-gray-700">Stock: {p.quantity}</span>
+              </div>
               <Link
-                to={`/products/${product.id}`}
-                className="block text-center mt-4 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                to={`/products/${p.id}`}
+                className="mt-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 px-4 rounded-xl text-center hover:scale-105 hover:shadow-lg transition"
               >
                 View Details
               </Link>
@@ -120,9 +65,8 @@ const Products = () => {
           </div>
         ))}
       </div>
-
     </div>
   );
-};
+}
 
 export default Products;

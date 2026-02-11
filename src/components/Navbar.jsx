@@ -57,8 +57,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md px-8 py-4 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        
-        {/*Logo and navigation */}
+        {/* Logo and navigation */}
         <div className="flex items-center gap-6">
           <img
             src={GreenhillsLogo}
@@ -74,7 +73,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Center: Search bar */}
+        {/* Search bar */}
         <div className="flex-1 mx-8">
           <input
             type="text"
@@ -83,7 +82,7 @@ const Navbar = () => {
           />
         </div>
 
-        {/*Profile / Cart */}
+        {/* Profile / Cart */}
         <div className="flex items-center gap-4 relative">
           {!user ? (
             <>
@@ -117,7 +116,7 @@ const Navbar = () => {
                       {profile?.full_name || "User"}
                     </p>
 
-                    {/* Admin Dashboard link */}
+                    {/* Admin link */}
                     {profile?.role === "admin" && (
                       <Link
                         to="/admin"
