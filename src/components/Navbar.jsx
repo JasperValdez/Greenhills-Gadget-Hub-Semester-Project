@@ -12,71 +12,38 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Helper function to fetch profile
-    const fetchProfile = async (userId) => {
-      const { data: prof, error } = await supabase
-        .from("profiles")
-        .select("full_name, role")
-        .eq("id", userId)
-        .single();
-
-      if (!error) {
-        setProfile(prof);
-      } else {
-        setProfile(null);
-      }
-    };
-
- 
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      const currentUser = data.session?.user || null;
+      setUser(data.session?.user || null);
 
-      setUser(currentUser);
-      setDropdownOpen(false); 
-
-      if (currentUser) {
-        await fetchProfile(currentUser.id);
+      if (data.session?.user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, role")
+          .eq("id", data.session.user.id)
+          .single();
+        setProfile(prof);
       }
     };
 
     checkSession();
 
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const currentUser = session?.user ?? null;
-
-        setUser(currentUser);
-        setDropdownOpen(false);
-
-        if (currentUser) {
-          await fetchProfile(currentUser.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      if (!session) setProfile(null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Logout handler
   const handleLogout = async () => {
-    setDropdownOpen(false);
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout error:", error.message);
-      return;
-    }
-
+    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
-    navigate("/login", { replace: true });
+    navigate("/login");
   };
 
-
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -90,8 +57,8 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md px-8 py-4 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-        {/* Logo + Nav Links */}
+        
+        {/*Logo and navigation */}
         <div className="flex items-center gap-6">
           <img
             src={GreenhillsLogo}
@@ -107,7 +74,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Search Bar */}
+        {/* Center: Search bar */}
         <div className="flex-1 mx-8">
           <input
             type="text"
@@ -116,7 +83,7 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Profile + Cart */}
+        {/*Profile / Cart */}
         <div className="flex items-center gap-4 relative">
           {!user ? (
             <>
@@ -135,7 +102,7 @@ const Navbar = () => {
             </>
           ) : (
             <div className="flex items-center gap-4">
-              {/* Profile Dropdown */}
+              {/* Profile dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -145,7 +112,7 @@ const Navbar = () => {
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg z-50">
                     <p className="px-4 py-2 text-gray-700 border-b">
                       {profile?.full_name || "User"}
                     </p>
@@ -170,7 +137,7 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Cart */}
+              {/* Cart icon */}
               <ShoppingCart
                 className="cursor-pointer text-gray-800"
                 size={24}
