@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
-import { Link } from "react-router-dom";
-import { Tag, Box, ShoppingCart, Laptop, Monitor, Smartphone, Keyboard, Headphones, Mouse, LayoutGrid } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Tag, Box, ShoppingCart, Laptop, Monitor, Smartphone, Keyboard, Headphones, Mouse, LayoutGrid, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const categories = [
@@ -19,6 +19,9 @@ function Products() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -27,20 +30,41 @@ function Products() {
         console.error("Error fetching products:", error);
       } else {
         setProducts(data);
-        setFilteredProducts(data);
       }
       setLoading(false);
     };
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    let result = products;
+
+    if (activeCategory !== "All") {
+      result = result.filter((p) => p.category === activeCategory);
+    }
+
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter((p) => 
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.description?.toLowerCase().includes(lowerQuery) ||
+        p.category.toLowerCase().includes(lowerQuery)
+      );
+    }
+
+    setFilteredProducts(result);
+  }, [activeCategory, searchQuery, products]);
+
   const handleFilter = (category) => {
     setActiveCategory(category);
-    if (category === "All") {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(products.filter((p) => p.category === category));
+    if (searchQuery) {
+        setSearchParams({});
     }
+  };
+
+  const clearSearch = () => {
+    setSearchParams({});
+    setActiveCategory("All");
   };
 
   if (loading) return (
@@ -52,23 +76,29 @@ function Products() {
 
   return (
     <div className="mt-6 px-4">
-      {/* Big Hero Container */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-12 flex flex-col items-center text-center text-white"
       >
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
+        <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
           <ShoppingCart size={64} className="mb-4 text-white/90" />
         </motion.div>
         <h1 className="text-5xl font-extrabold mb-2 drop-shadow-md">Premium Tech Store</h1>
         <p className="text-xl text-blue-100 max-w-2xl">Elevate your setup with our handpicked collection of high-performance gadgets.</p>
       </motion.div>
 
-      {/* Category Section */}
+      {searchQuery && (
+        <div className="max-w-6xl mx-auto mt-8 flex items-center justify-between bg-blue-50 p-4 rounded-2xl border border-blue-100">
+          <p className="text-blue-800 font-medium">
+            Showing results for: <span className="font-bold underline">"{searchQuery}"</span>
+          </p>
+          <button onClick={clearSearch} className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold text-sm transition">
+            <XCircle size={18} /> Clear Search
+          </button>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto mt-12">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center lg:text-left">Browse by Category</h2>
         <div className="flex flex-wrap justify-center lg:justify-start gap-6">
@@ -97,17 +127,20 @@ function Products() {
         </div>
       </div>
 
-      {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-2 py-10">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout"> {/* Changed to popLayout for smoother grid transitions */}
           {filteredProducts.length === 0 ? (
-            <motion.p 
+            <motion.div 
+              key="no-results"
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
-              className="text-center text-xl text-gray-500 py-20"
+              exit={{ opacity: 0 }}
+              className="text-center py-20 flex flex-col items-center"
             >
-              No products found in this category.
-            </motion.p>
+              <XCircle size={64} className="text-gray-300 mb-4" />
+              <p className="text-xl text-gray-500">No products found for your criteria.</p>
+              <button onClick={clearSearch} className="mt-4 text-blue-600 font-bold hover:underline">Reset filters</button>
+            </motion.div>
           ) : (
             <motion.div 
               layout
@@ -116,13 +149,14 @@ function Products() {
               {filteredProducts.map((p) => (
                 <motion.div
                   layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }} // Removed scale to prevent "ghosting" artifacts
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                   key={p.id}
                   className="bg-white rounded-3xl shadow-lg hover:shadow-2xl overflow-hidden transition-all duration-300 border border-gray-100 flex flex-col group"
                 >
-                  <div className="relative overflow-hidden h-52">
+                  <div className="relative overflow-hidden h-52 bg-gray-50"> {/* Added bg-gray-50 placeholder */}
                     {p.image_url && (
                       <img
                         src={p.image_url}

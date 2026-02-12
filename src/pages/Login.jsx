@@ -4,12 +4,12 @@ import { supabase } from "../supabase-client";
 import { AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -17,13 +17,12 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
     
     if (authError) {
-      setError(authError.message);
+      toast.error(authError.message);
       setLoading(false);
       return;
     }
@@ -34,6 +33,7 @@ const Login = () => {
       .eq("id", data.user.id)
       .single();
 
+    toast.success("Welcome back!");
     navigate(profile?.role === "admin" ? "/admin" : "/");
   };
 
@@ -42,7 +42,7 @@ const Login = () => {
       provider: "google",
       options: { redirectTo: redirectUrl },
     });
-    if (oauthError) setError(oauthError.message);
+    if (oauthError) toast.error(oauthError.message);
   };
 
   useEffect(() => {
@@ -62,71 +62,80 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-green-100 via-slate-50 to-emerald-100 px-4">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", damping: 20 }}
+        className="bg-white/80 backdrop-blur-md p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-white"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Login</h2>
-        {error && <p className="bg-red-100 text-red-600 p-2 rounded mb-4 text-sm text-center">{error}</p>}
+        <div className="text-center mb-10">
+          <h2 className="text-4xl font-black text-gray-900 tracking-tight">Welcome Back</h2>
+          <p className="text-gray-500 mt-2 font-medium">Please enter your details</p>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="relative">
-            <AiOutlineMail className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border px-10 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            />
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="group">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 ml-1">Email</label>
+            <div className="relative">
+              <AiOutlineMail className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
+              <input
+                type="email"
+                placeholder="email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-gray-50 border border-gray-200 px-12 py-3.5 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+              />
+            </div>
           </div>
 
-          <div className="relative">
-            <AiOutlineLock className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border px-10 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            />
-            <span
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 cursor-pointer"
-            >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
-            </span>
+          <div className="group">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 ml-1">Password</label>
+            <div className="relative">
+              <AiOutlineLock className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-gray-50 border border-gray-200 px-12 py-3.5 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-emerald-600"
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+              </span>
+            </div>
           </div>
 
           <motion.button 
-            whileHover={{ scale: 1.01 }}
+            whileHover={{ scale: 1.01, translateY: -2 }}
             whileTap={{ scale: 0.99 }}
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50"
+            className="w-full bg-emerald-600 text-white py-4 rounded-2xl hover:bg-emerald-700 transition-all font-bold shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] disabled:opacity-50"
           >
-            {loading ? "Authenticating..." : "Login"}
+            {loading ? "Signing in..." : "Sign In"}
           </motion.button>
         </form>
 
-        <div className="mt-6 flex items-center gap-4">
-          <hr className="flex-grow border-gray-300" />
-          <span className="text-gray-500 text-sm">OR</span>
-          <hr className="flex-grow border-gray-300" />
+        <div className="mt-10 flex items-center gap-4">
+          <hr className="flex-grow border-gray-200" />
+          <span className="text-gray-400 text-xs font-black tracking-widest uppercase">Or continue with</span>
+          <hr className="flex-grow border-gray-200" />
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full mt-6 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+          className="w-full mt-6 flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-700 py-3.5 rounded-2xl hover:bg-gray-50 hover:border-gray-200 transition-all font-bold shadow-sm"
         >
-          <FcGoogle size={24} /> Continue with Google
+          <FcGoogle size={24} /> Google
         </button>
 
-        <p className="text-sm text-center mt-4 text-gray-600">
-          Don’t have an account? <Link to="/register" className="text-green-600 font-medium">Sign up</Link>
+        <p className="text-sm text-center mt-10 text-gray-500 font-medium">
+          New here? <Link to="/register" className="text-emerald-600 font-bold hover:text-emerald-700 underline decoration-2 underline-offset-4">Create Account</Link>
         </p>
       </motion.div>
     </div>

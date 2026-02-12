@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../supabase-client";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, ArrowLeft, Plus, Minus, Star, Tag } from "lucide-react";
+import { motion } from "framer-motion";
+import { ShoppingCart, ArrowLeft, Plus, Minus, Star, Tag, Zap } from "lucide-react";
+import toast from "react-hot-toast"; 
 
 function ProductDetails() {
   const { id } = useParams();
@@ -15,7 +16,6 @@ function ProductDetails() {
   useEffect(() => {
     const fetchProductAndSimilar = async () => {
       setLoading(true);
-      // Fetch Main Product
       const { data: mainProduct, error } = await supabase
         .from("products")
         .select("*")
@@ -23,11 +23,9 @@ function ProductDetails() {
         .single();
 
       if (error) {
-        console.error(error);
+        toast.error("Could not load product.");
       } else {
         setProduct(mainProduct);
-        
-        // Fetch Similar Products (Same category, excluding current ID)
         const { data: related } = await supabase
           .from("products")
           .select("*")
@@ -45,8 +43,9 @@ function ProductDetails() {
 
   const handleAddToCart = async () => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
+    
     if (userError || !userData.user) {
-      alert("Please login to add items to your cart.");
+      toast.error("Please login to continue", { icon: '🔑' });
       return;
     }
 
@@ -59,7 +58,7 @@ function ProductDetails() {
         .select("*")
         .eq("user_id", userId)
         .eq("product_id", id)
-        .single();
+        .maybeSingle();
 
       if (existingCart) {
         await supabase
@@ -67,127 +66,133 @@ function ProductDetails() {
           .update({ quantity: existingCart.quantity + quantity })
           .eq("id", existingCart.id);
       } else {
-        await supabase.from("cart").insert([
-          { user_id: userId, product_id: id, quantity },
-        ]);
+        await supabase.from("cart").insert([{ user_id: userId, product_id: id, quantity }]);
       }
-      alert("Added to cart successfully!");
+      
+      // Clean, light-themed toast
+      toast.success(`${product.name} added!`, {
+        style: {
+          borderRadius: '12px',
+          background: '#ffffff',
+          color: '#1f2937',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+        },
+      });
+
     } catch (err) {
-      console.error(err);
+      toast.error("Something went wrong.");
     } finally {
       setAdding(false);
     }
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <div className="flex justify-center items-center min-h-screen bg-white">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-emerald-500"></div>
     </div>
   );
 
-  if (!product) return <p className="text-center mt-10">Product not found.</p>;
+  if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
-        {/* Back Button */}
-        <Link to="/" className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-6 transition">
-          <ArrowLeft size={20} className="mr-2" /> Back to Store
+    <div className="min-h-screen bg-[#F9FAFB] text-gray-900 pb-12">
+      <div className="max-w-6xl mx-auto p-6 md:p-10">
+        
+        <Link to="/products" className="inline-flex items-center text-gray-500 hover:text-emerald-600 mb-8 transition-all group font-medium">
+          <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
+          Explore All Products
         </Link>
 
-        {/* Main Product Section */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-gray-100"
         >
-          <div className="flex flex-col md:row lg:flex-row">
-            {/* Image Wrap */}
-            <div className="lg:w-1/2 p-4">
-              <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
+          <div className="flex flex-col lg:flex-row">
+            {/* Image Area */}
+            <div className="lg:w-1/2 p-8 bg-gray-50/50">
+              <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner flex items-center justify-center">
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
+                  className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-500"
                 />
               </div>
             </div>
 
-            {/* Details Wrap */}
-            <div className="lg:w-1/2 p-8 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+            {/* Content Area */}
+            <div className="lg:w-1/2 p-10 lg:p-14 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider border border-emerald-100">
                   {product.category}
                 </span>
-                <div className="flex text-yellow-400">
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} />
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={16} fill={i < 4 ? "currentColor" : "none"} />)}
                 </div>
               </div>
 
-              <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">{product.name}</h1>
-              <p className="text-gray-600 text-lg leading-relaxed mb-6">{product.description}</p>
+              <h1 className="text-4xl font-bold mb-4 text-gray-900 tracking-tight">{product.name}</h1>
+              <p className="text-gray-500 text-lg leading-relaxed mb-8">{product.description}</p>
               
-              <div className="flex items-center gap-4 mb-8">
-                <span className="text-4xl font-bold text-gray-900">₱{parseFloat(product.price).toLocaleString()}</span>
-                <span className={`text-sm font-medium px-3 py-1 rounded-lg ${product.quantity > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                  {product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of Stock'}
+              <div className="flex items-center gap-4 mb-10">
+                <span className="text-4xl font-extrabold text-gray-900">₱{parseFloat(product.price).toLocaleString()}</span>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                   {product.quantity > 0 ? `Stock: ${product.quantity}` : 'Out of Stock'}
                 </span>
               </div>
 
-              {/* Quantity Selector */}
-              <div className="flex items-center gap-6 mb-8">
-                <div className="flex items-center border-2 border-gray-100 rounded-2xl p-1 bg-gray-50">
+              {/* Quantity */}
+              <div className="flex items-center gap-4 mb-10">
+                <div className="flex items-center border border-gray-200 rounded-2xl p-1 bg-white shadow-sm">
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 hover:bg-white rounded-xl transition shadow-sm disabled:opacity-30"
+                    className="p-3 hover:bg-gray-50 rounded-xl transition disabled:opacity-20"
+                    disabled={quantity <= 1}
                   >
-                    <Minus size={20} />
+                    <Minus size={18} />
                   </button>
-                  <span className="w-12 text-center font-bold text-lg">{quantity}</span>
+                  <span className="w-10 text-center font-bold text-xl">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                    className="p-2 hover:bg-white rounded-xl transition shadow-sm"
+                    className="p-3 hover:bg-gray-50 rounded-xl transition disabled:opacity-20"
+                    disabled={quantity >= product.quantity}
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                   </button>
                 </div>
-                <p className="text-gray-400 text-sm italic">Max available: {product.quantity}</p>
               </div>
 
               <button
                 onClick={handleAddToCart}
                 disabled={adding || product.quantity === 0}
-                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-600 transition-all flex items-center justify-center gap-3 shadow-lg shadow-gray-200 disabled:opacity-50"
+                className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:bg-emerald-700 transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:bg-gray-400"
               >
                 <ShoppingCart size={22} />
-                {adding ? "Adding to Cart..." : "Add to Cart"}
+                {adding ? "Updating Cart..." : "Add to Cart"}
               </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Similar Products Section */}
+        {/* Similar Items */}
         {similarProducts.length > 0 && (
           <div className="mt-20">
-            <h2 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
-              <Tag className="text-blue-500" /> You May Also Like
+            <h2 className="text-2xl font-bold mb-8 text-gray-800 flex items-center gap-2">
+              <Zap className="text-emerald-500" size={24} /> Similar Gadgets
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {similarProducts.map((p) => (
                 <Link 
                   to={`/products/${p.id}`} 
                   key={p.id}
-                  className="bg-white rounded-2xl p-3 border border-gray-100 hover:shadow-xl transition-all group"
+                  className="bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl transition-all group"
                 >
-                  <div className="aspect-square rounded-xl overflow-hidden mb-4">
-                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                  <div className="aspect-square rounded-xl overflow-hidden mb-4 bg-gray-50">
+                    <img src={p.image_url} alt={p.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition duration-700" />
                   </div>
-                  <h3 className="font-bold text-gray-800 line-clamp-1">{p.name}</h3>
-                  <p className="text-blue-600 font-bold">₱{parseFloat(p.price).toLocaleString()}</p>
+                  <h3 className="font-bold text-gray-800 line-clamp-1 group-hover:text-emerald-600 transition-colors">{p.name}</h3>
+                  <p className="text-emerald-600 font-bold mt-1">₱{parseFloat(p.price).toLocaleString()}</p>
                 </Link>
               ))}
             </div>

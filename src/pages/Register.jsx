@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabase-client";
 import { AiOutlineUser, AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -22,103 +23,117 @@ const Register = () => {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
 
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          full_name: fullName,
-          role: "customer",
+        toast.success("Registration successful! Check your email.", {
+          duration: 5000,
+          icon: '📩',
         });
-
-        if (profileError) throw profileError;
-        
-        alert("Registration successful! Please check your email for confirmation or login.");
         navigate("/login");
       }
     } catch (err) {
       setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-100 via-slate-50 to-emerald-100 px-4">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white/80 backdrop-blur-md p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-white"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Create Account</h2>
+        <div className="text-center mb-10">
+          <h2 className="text-4xl font-black text-gray-900 tracking-tight">Join Us</h2>
+          <p className="text-gray-500 mt-2 font-medium">Create your account in seconds</p>
+        </div>
         
         {error && (
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm text-center border border-red-200"
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 text-sm"
           >
             {error}
-          </motion.p>
+          </motion.div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div className="relative">
-            <AiOutlineUser className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="w-full border px-10 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            />
+        <form onSubmit={handleRegister} className="space-y-5">
+          <div className="group">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 ml-1">Full Name</label>
+            <div className="relative">
+              <AiOutlineUser className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" size={20} />
+              <input
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="w-full bg-gray-50 border border-gray-200 px-12 py-3.5 rounded-2xl focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all"
+              />
+            </div>
           </div>
 
-          <div className="relative">
-            <AiOutlineMail className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border px-10 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            />
+          <div className="group">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 ml-1">Email Address</label>
+            <div className="relative">
+              <AiOutlineMail className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" size={20} />
+              <input
+                type="email"
+                placeholder="hello@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-gray-50 border border-gray-200 px-12 py-3.5 rounded-2xl focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all"
+              />
+            </div>
           </div>
 
-          <div className="relative">
-            <AiOutlineLock className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border px-10 py-2 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-            />
-            <span
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 cursor-pointer"
-            >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
-            </span>
+          <div className="group">
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 ml-1">Password</label>
+            <div className="relative">
+              <AiOutlineLock className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" size={20} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-gray-50 border border-gray-200 px-12 py-3.5 rounded-2xl focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all"
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-green-600"
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+              </span>
+            </div>
           </div>
 
           <motion.button 
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, translateY: -2 }}
             whileTap={{ scale: 0.98 }}
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-green-600 text-white py-4 rounded-2xl hover:bg-green-700 transition-all font-bold shadow-[0_10px_20px_-10px_rgba(22,163,74,0.5)] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
-            {loading ? "Creating Account..." : "Register"}
+            {loading ? "Creating Account..." : "Create Account"}
           </motion.button>
         </form>
 
-        <p className="text-sm text-center mt-4 text-gray-600">
-          Already have an account? <Link to="/login" className="text-green-600 font-medium hover:underline">Login</Link>
+        <p className="text-sm text-center mt-8 text-gray-500 font-medium">
+          Already have an account? <Link to="/login" className="text-green-600 font-bold hover:text-green-700 underline decoration-2 underline-offset-4">Sign In</Link>
         </p>
       </motion.div>
     </div>

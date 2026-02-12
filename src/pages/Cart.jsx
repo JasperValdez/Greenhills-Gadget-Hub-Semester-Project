@@ -1,170 +1,181 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Truck } from "lucide-react";
 
 function Cart() {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null); // track which item is being updated
-  const [removing, setRemoving] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     const fetchCart = async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
-        alert("You must be logged in to see your cart.");
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
         setLoading(false);
         return;
       }
 
-      const userId = userData.user.id;
-
       const { data, error } = await supabase
         .from("cart")
         .select(`
-          id,
-          quantity,
-          product_id,
-          products (
-            id,
-            name,
-            price,
-            image_url,
-            quantity,
-            description
-          )
+          id, quantity, product_id,
+          products ( id, name, price, image_url, quantity, description )
         `)
-        .eq("user_id", userId);
+        .eq("user_id", userData.user.id);
 
-      if (error) {
-        console.error("Error fetching cart:", error);
-        alert("Failed to fetch cart. Check console.");
-      } else {
-        const items = data.map((c) => ({
+      if (!error && data) {
+        setCartItems(data.map(c => ({
           id: c.id,
           quantity: c.quantity,
           name: c.products?.name,
           price: c.products?.price,
           image_url: c.products?.image_url,
           stock: c.products?.quantity,
-          description: c.products?.description,
-        }));
-        setCartItems(items);
+        })));
       }
-
       setLoading(false);
     };
-
     fetchCart();
   }, []);
 
-  const updateQuantity = async (cartId, newQuantity) => {
+  const updateQuantity = async (cartId, newQty) => {
+    const item = cartItems.find(i => i.id === cartId);
+    if (!item || newQty < 1 || newQty > item.stock) return;
+
     setUpdatingId(cartId);
-
-    try {
-      const item = cartItems.find((i) => i.id === cartId);
-      if (!item) return;
-
-      if (newQuantity < 1 || newQuantity > item.stock) return;
-
-      const { error } = await supabase
-        .from("cart")
-        .update({ quantity: newQuantity })
-        .eq("id", cartId);
-
-      if (error) throw error;
-
-      setCartItems((prev) =>
-        prev.map((i) =>
-          i.id === cartId ? { ...i, quantity: newQuantity } : i
-        )
-      );
-    } catch (err) {
-      console.error("Error updating quantity:", err);
-      alert("Failed to update quantity.");
-    } finally {
-      setUpdatingId(null);
+    const { error } = await supabase.from("cart").update({ quantity: newQty }).eq("id", cartId);
+    if (!error) {
+      setCartItems(prev => prev.map(i => i.id === cartId ? { ...i, quantity: newQty } : i));
     }
+    setUpdatingId(null);
   };
 
   const removeItem = async (cartId) => {
-    setRemoving(true);
+    setRemovingId(cartId);
     const { error } = await supabase.from("cart").delete().eq("id", cartId);
-    if (error) {
-      console.error("Error removing item:", error);
-      alert("Failed to remove item.");
-    } else {
-      setCartItems(cartItems.filter((item) => item.id !== cartId));
-    }
-    setRemoving(false);
+    if (!error) setCartItems(prev => prev.filter(i => i.id !== cartId));
+    setRemovingId(null);
   };
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + parseFloat(item.price) * item.quantity,
-    0
+  const subtotal = cartItems.reduce((acc, item) => acc + parseFloat(item.price) * item.quantity, 0);
+  const shipping = subtotal > 5000 || subtotal === 0 ? 0 : 250;
+  const total = subtotal + shipping;
+
+  if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+
+  if (cartItems.length === 0) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
+      <div className="bg-gray-100 p-6 rounded-full mb-4"><ShoppingBag size={48} className="text-gray-400" /></div>
+      <h2 className="text-2xl font-bold text-gray-800">Your cart is empty</h2>
+      <p className="text-gray-500 mb-6">Looks like you haven't added anything to your cart yet.</p>
+      <Link to="/" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Go Shopping</Link>
+    </div>
   );
 
-  if (loading) return <p className="text-center mt-10">Loading cart...</p>;
-  if (cartItems.length === 0) return <p className="text-center mt-10">Your cart is empty.</p>;
-
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">Your Cart</h2>
-      <div className="flex flex-col gap-4">
-        {cartItems.map((item) => (
-          <div key={item.id} className="flex justify-between items-center border p-4 rounded">
-            <div className="flex gap-4 items-center">
-              {item.image_url && (
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="w-24 h-24 object-cover rounded"
-                />
-              )}
-              <div>
-                <h3 className="font-bold">{item.name}</h3>
-                <p>Price: ₱{parseFloat(item.price).toLocaleString("en-PH")}</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    disabled={item.quantity <= 1 || updatingId === item.id}
-                    className="bg-gray-300 px-2 rounded hover:bg-gray-400 disabled:opacity-50"
-                  >
-                    -
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    disabled={item.quantity >= item.stock || updatingId === item.id}
-                    className="bg-gray-300 px-2 rounded hover:bg-gray-400 disabled:opacity-50"
-                  >
-                    +
-                  </button>
+    <div className="max-w-6xl mx-auto p-4 md:p-8">
+      <h1 className="text-3xl font-black text-gray-900 mb-8 flex items-center gap-3">
+        <ShoppingBag size={32} className="text-blue-600" /> My Cart
+      </h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Side: Items */}
+        <div className="lg:col-span-2 space-y-4">
+          <AnimatePresence>
+            {cartItems.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4"
+              >
+                <img src={item.image_url} alt={item.name} className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl bg-gray-50" />
+                
+                <div className="flex-grow">
+                  <h3 className="font-bold text-gray-800 md:text-lg">{item.name}</h3>
+                  <p className="text-blue-600 font-bold mb-2">₱{parseFloat(item.price).toLocaleString()}</p>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1 || updatingId === item.id}
+                        className="p-1 hover:bg-white rounded-md transition disabled:opacity-30"
+                      ><Minus size={16} /></button>
+                      <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= item.stock || updatingId === item.id}
+                        className="p-1 hover:bg-white rounded-md transition disabled:opacity-30"
+                      ><Plus size={16} /></button>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Stock: {item.stock}</span>
+                  </div>
                 </div>
-                <p>Stock Available: {item.stock}</p>
+
+                <button 
+                  onClick={() => removeItem(item.id)}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Right Side: Summary */}
+        <div className="lg:col-span-1">
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
+            <h2 className="text-xl font-bold mb-6 text-gray-800">Order Summary</h2>
+            
+            <div className="space-y-3 text-gray-600 mb-6">
+              <div className="flex justify-between"><span>Subtotal</span><span>₱{subtotal.toLocaleString()}</span></div>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span className={shipping === 0 ? "text-green-600 font-bold" : ""}>
+                  {shipping === 0 ? "FREE" : `₱${shipping}`}
+                </span>
+              </div>
+              {subtotal < 5000 && (
+                <p className="text-[10px] text-blue-500 flex items-center gap-1">
+                  <Truck size={12} /> Add ₱{(5000 - subtotal).toLocaleString()} more for FREE shipping!
+                </p>
+              )}
+            </div>
+
+            <div className="border-t pt-4 mb-6">
+              <div className="flex justify-between items-center text-xl font-black text-gray-900">
+                <span>Total</span>
+                <span>₱{total.toLocaleString()}</span>
               </div>
             </div>
-            <button
-              onClick={() => removeItem(item.id)}
-              disabled={removing}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+
+            <Link
+              to="/checkout"
+              className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all shadow-lg ${
+                cartItems.some(i => i.stock === 0) 
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100"
+              }`}
             >
-              {removing ? "Removing..." : "Remove"}
-            </button>
+              {cartItems.some(i => i.stock === 0) ? "Remove Out of Stock" : "Checkout Now"}
+              <ArrowRight size={18} />
+            </Link>
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+              <span>Secure Payment</span>
+              <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
+              <span>Fast Delivery</span>
+            </div>
           </div>
-        ))}
+        </div>
       </div>
-      <h3 className="text-xl font-bold mt-6">
-        Total: ₱{total.toLocaleString("en-PH")}
-      </h3>
-      <Link
-        to="/checkout"
-        className={`inline-block mt-4 py-3 px-6 rounded text-white ${
-          cartItems.some(i => i.stock === 0) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-        }`}
-      >
-        {cartItems.some(i => i.stock === 0) ? "Remove out-of-stock items" : "Proceed to Checkout"}
-      </Link>
     </div>
   );
 }
