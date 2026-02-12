@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabase-client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast"; // Added toast import
 import { CreditCard, MapPin, User, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 
 function Checkout() {
@@ -56,7 +57,7 @@ function Checkout() {
         customer_name: formData.name,
         customer_email: formData.email,
         customer_address: formData.address,
-        items: cartItems, // JSONB will store the whole array
+        items: cartItems, 
         total_price: total,
         status: "pending",
       };
@@ -67,16 +68,22 @@ function Checkout() {
       // Clear Cart
       await supabase.from("cart").delete().eq("user_id", userData.user.id);
 
-      alert("🎉 Order placed successfully!");
+      // Use toast instead of alert
+      toast.success("Order placed successfully! ", {
+        duration: 4000,
+        position: 'top-center',
+      });
+      
       navigate("/");
     } catch (err) {
-      alert(err.message);
+      // Use toast for errors
+      toast.error(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="h-screen flex justify-center items-center font-bold">Validating Session...</div>;
+  if (loading) return <div className="h-screen flex justify-center items-center font-bold text-blue-600">Validating Session...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -148,7 +155,7 @@ function Checkout() {
             <div className="space-y-4 max-h-80 overflow-y-auto mb-6 pr-2">
               {cartItems.map((item) => (
                 <div key={item.id} className="flex gap-4 items-center">
-                  <img src={item.image_url} className="w-16 h-16 rounded-xl object-cover bg-gray-50" />
+                  <img src={item.image_url} className="w-16 h-16 rounded-xl object-cover bg-gray-50" alt={item.name} />
                   <div className="flex-grow">
                     <p className="font-bold text-sm line-clamp-1">{item.name}</p>
                     <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
