@@ -3,33 +3,38 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabase-client";
 import { AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
+import { motion } from "framer-motion";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Determine redirect URL dynamically based on environment
   const redirectUrl = window.location.origin;
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return setError(error.message);
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
 
-    // fetch profile role
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
       .single();
 
-    if (profile?.role === "admin") navigate("/admin"); // admin redirect
-    else navigate("/"); // customer redirect
+    navigate(profile?.role === "admin" ? "/admin" : "/");
   };
 
   const handleGoogleLogin = async () => {
@@ -37,48 +42,38 @@ const Login = () => {
       provider: "google",
       options: { redirectTo: redirectUrl },
     });
-    if (oauthError) return setError(oauthError.message);
+    if (oauthError) setError(oauthError.message);
   };
 
   useEffect(() => {
-    const checkGoogleProfile = async () => {
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!user) return;
-
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (!existingProfile) {
-        // default Google signup as customer
-        await supabase.from("profiles").insert({
-          id: user.id,
-          full_name: user.user_metadata.full_name || user.email,
-          role: "customer",
-        });
-        navigate("/");
-      } else {
-        // redirect based on role
-        if (existingProfile.role === "admin") navigate("/admin");
-        else navigate("/");
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profile) navigate(profile.role === "admin" ? "/admin" : "/");
       }
     };
-
-    checkGoogleProfile();
+    checkSession();
   }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
+      >
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Login</h2>
-        {error && <p className="text-red-600 mb-3 text-sm text-center">{error}</p>}
+        {error && <p className="bg-red-100 text-red-600 p-2 rounded mb-4 text-sm text-center">{error}</p>}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="relative">
-            <AiOutlineMail className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" size={20} />
+            <AiOutlineMail className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="email"
               placeholder="Email"
@@ -90,7 +85,7 @@ const Login = () => {
           </div>
 
           <div className="relative">
-            <AiOutlineLock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" size={20} />
+            <AiOutlineLock className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
@@ -101,21 +96,26 @@ const Login = () => {
             />
             <span
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 cursor-pointer"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 cursor-pointer"
             >
               {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
             </span>
           </div>
 
-          <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium">
-            Login
-          </button>
+          <motion.button 
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50"
+          >
+            {loading ? "Authenticating..." : "Login"}
+          </motion.button>
         </form>
 
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <hr className="border-gray-300 flex-grow" />
+        <div className="mt-6 flex items-center gap-4">
+          <hr className="flex-grow border-gray-300" />
           <span className="text-gray-500 text-sm">OR</span>
-          <hr className="border-gray-300 flex-grow" />
+          <hr className="flex-grow border-gray-300" />
         </div>
 
         <button
@@ -128,7 +128,7 @@ const Login = () => {
         <p className="text-sm text-center mt-4 text-gray-600">
           Don’t have an account? <Link to="/register" className="text-green-600 font-medium">Sign up</Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

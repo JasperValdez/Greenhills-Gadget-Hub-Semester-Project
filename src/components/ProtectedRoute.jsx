@@ -29,12 +29,7 @@ const ProtectedRoute = ({ children, role }) => {
         .eq("id", user.id)
         .single();
 
-      if (profile?.role === role) {
-        setAuthorized(true);
-      } else {
-        setAuthorized(false);
-      }
-
+      setAuthorized(profile?.role === role);
       setLoading(false);
     };
 
@@ -44,16 +39,12 @@ const ProtectedRoute = ({ children, role }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-lg font-semibold">Checking access...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
-  if (!authorized) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
+  return authorized ? children : <Navigate to="/" replace />;
 };
 
 export default ProtectedRoute;
