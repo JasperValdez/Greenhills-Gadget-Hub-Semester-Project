@@ -293,7 +293,7 @@ function AdminDashboard() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                <LayoutGrid className="text-gray-400" /> Live Catalog
+                <LayoutGrid className="text-gray-400" /> All Products
               </h2>
               <p className="text-xs text-gray-500 mt-1">Manage and view your products</p>
             </div>
