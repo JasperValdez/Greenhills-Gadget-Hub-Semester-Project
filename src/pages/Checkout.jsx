@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabase-client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import toast from "react-hot-toast"; // Added toast import
+import toast from "react-hot-toast";
 import { CreditCard, MapPin, User, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 
 function Checkout() {
@@ -68,22 +68,29 @@ function Checkout() {
       // Clear Cart
       await supabase.from("cart").delete().eq("user_id", userData.user.id);
 
-      // Use toast instead of alert
-      toast.success("Order placed successfully! ", {
+      toast.success("Order placed successfully! 🛒", {
         duration: 4000,
         position: 'top-center',
+        style: {
+          background: '#059669',
+          color: '#fff',
+        }
       });
       
       navigate("/");
     } catch (err) {
-      // Use toast for errors
       toast.error(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="h-screen flex justify-center items-center font-bold text-blue-600">Validating Session...</div>;
+  if (loading) return (
+    <div className="h-screen flex flex-col justify-center items-center gap-4">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+      <p className="font-bold text-emerald-600 animate-pulse">Validating Session...</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -91,23 +98,23 @@ function Checkout() {
         
         {/* Left Side: Shipping Form */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <button onClick={() => navigate("/cart")} className="flex items-center text-gray-500 hover:text-black mb-6 transition">
+          <button onClick={() => navigate("/cart")} className="flex items-center text-gray-400 hover:text-emerald-600 mb-6 transition font-medium">
             <ArrowLeft size={18} className="mr-2" /> Return to Cart
           </button>
           
-          <h2 className="text-3xl font-black text-gray-900 mb-8 flex items-center gap-2">
-            <ShieldCheck className="text-blue-600" /> Secure Checkout
+          <h2 className="text-3xl font-black text-gray-900 mb-8 flex items-center gap-3">
+            <ShieldCheck className="text-emerald-600" size={36} /> Secure Checkout
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-              <h3 className="font-bold text-lg mb-2">Shipping Information</h3>
+              <h3 className="font-bold text-lg mb-2 text-gray-800">Shipping Information</h3>
               
               <div className="relative">
                 <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
                 <input
                   type="text" placeholder="Full Name" required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
                 />
               </div>
@@ -116,7 +123,7 @@ function Checkout() {
                 <Mail className="absolute left-3 top-3.5 text-gray-400" size={18} />
                 <input
                   type="email" placeholder="Email Address" required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                   value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                 />
               </div>
@@ -125,59 +132,69 @@ function Checkout() {
                 <MapPin className="absolute left-3 top-3.5 text-gray-400" size={18} />
                 <textarea
                   placeholder="Complete Delivery Address" required rows="3"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none transition-all"
                   value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})}
                 />
               </div>
             </div>
 
-            <div className="bg-blue-900 p-6 rounded-3xl text-white shadow-xl shadow-blue-100">
+            <div className="bg-emerald-950 p-6 rounded-3xl text-white shadow-xl shadow-emerald-100 border border-emerald-800">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold flex items-center gap-2"><CreditCard size={20}/> Payment Method</h3>
-                <span className="text-xs bg-blue-700 px-2 py-1 rounded">Cash on Delivery</span>
+                <h3 className="font-bold flex items-center gap-2"><CreditCard size={20} className="text-emerald-400"/> Payment Method</h3>
+                <span className="text-[10px] uppercase tracking-widest bg-emerald-800 px-3 py-1 rounded-full font-bold">Cash on Delivery</span>
               </div>
-              <p className="text-blue-200 text-sm">Currently only supporting COD in Metro Manila. Pay when your gadgets arrive!</p>
+              <p className="text-emerald-200/80 text-sm leading-relaxed">
+                Currently supporting COD in Metro Manila. Pay with cash when your premium gadgets arrive at your doorstep!
+              </p>
             </div>
 
             <button
               type="submit" disabled={submitting}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xl hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
+              className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98]"
             >
-              {submitting ? "Processing..." : `Pay ₱${total.toLocaleString()}`}
+              {submitting ? "Processing..." : `Confirm Order • ₱${total.toLocaleString()}`}
             </button>
           </form>
         </motion.div>
 
         {/* Right Side: Order Summary */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="lg:pt-14">
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-xl mb-6">Review Order</h3>
-            <div className="space-y-4 max-h-80 overflow-y-auto mb-6 pr-2">
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-10">
+            <h3 className="font-bold text-xl mb-6 text-gray-800">Review Order</h3>
+            <div className="space-y-4 max-h-80 overflow-y-auto mb-6 pr-2 custom-scrollbar">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-4 items-center">
-                  <img src={item.image_url} className="w-16 h-16 rounded-xl object-cover bg-gray-50" alt={item.name} />
-                  <div className="flex-grow">
-                    <p className="font-bold text-sm line-clamp-1">{item.name}</p>
-                    <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
+                <div key={item.id} className="flex gap-4 items-center group">
+                  <div className="relative overflow-hidden rounded-xl bg-gray-50 w-16 h-16">
+                    <img src={item.image_url} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt={item.name} />
                   </div>
-                  <p className="font-bold text-sm">₱{(item.price * item.quantity).toLocaleString()}</p>
+                  <div className="flex-grow">
+                    <p className="font-bold text-sm line-clamp-1 text-gray-700">{item.name}</p>
+                    <p className="text-xs font-bold text-emerald-600">Qty: {item.quantity}</p>
+                  </div>
+                  <p className="font-bold text-sm text-gray-900">₱{(item.price * item.quantity).toLocaleString()}</p>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-dashed pt-6 space-y-3">
-              <div className="flex justify-between text-gray-500">
+            <div className="border-t border-dashed border-gray-200 pt-6 space-y-3">
+              <div className="flex justify-between text-gray-500 font-medium">
                 <span>Subtotal</span>
-                <span>₱{subtotal.toLocaleString()}</span>
+                <span className="text-gray-900">₱{subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-gray-500 font-medium">
                 <span>Shipping</span>
-                <span className="text-green-600">{shipping === 0 ? "FREE" : `₱${shipping}`}</span>
+                <span className="text-emerald-600 font-bold">{shipping === 0 ? "FREE" : `₱${shipping}`}</span>
               </div>
               <div className="flex justify-between text-2xl font-black text-gray-900 pt-2">
                 <span>Total</span>
-                <span>₱{total.toLocaleString()}</span>
+                <span className="text-emerald-600">₱{total.toLocaleString()}</span>
               </div>
+            </div>
+            
+            <div className="mt-8 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+               <p className="text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
+                 Authorized Greenhills Retailer
+               </p>
             </div>
           </div>
         </motion.div>

@@ -33,10 +33,11 @@ const Contact = () => {
       if (error) throw error;
 
       setSubmitted(true);
-      toast.success("Message sent to Greenhills Center!");
+      toast.success("Message sent to Greenhills Center!", {
+        style: { background: '#059669', color: '#fff' }
+      });
       setFormData({ name: '', email: '', subject: '', message: '' });
       
-      // Auto-reset success view after 10 seconds
       setTimeout(() => setSubmitted(false), 10000);
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
@@ -59,7 +60,7 @@ const Contact = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1.5 mb-4 rounded-full bg-blue-50 text-blue-600 text-sm font-bold uppercase tracking-widest"
+            className="inline-block px-4 py-1.5 mb-4 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold uppercase tracking-widest"
           >
             Contact Us
           </motion.div>
@@ -68,10 +69,10 @@ const Contact = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight"
           >
-            Let's Start a <span className="text-blue-600">Conversation</span>
+            Let's Start a <span className="text-emerald-600">Conversation</span>
           </motion.h1>
-          <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto">
-            Need help with your order or have a technical question? Our team is ready to assist you.
+          <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto font-medium">
+            Need help with your setup or have a technical question? Our tech experts are ready to assist you.
           </p>
         </div>
 
@@ -84,32 +85,32 @@ const Contact = () => {
             className="space-y-4 order-2 lg:order-1"
           >
             <ContactInfoIcon 
-              icon={<Phone className="text-blue-600" size={24} />} 
+              icon={<Phone className="text-emerald-600" size={24} />} 
               title="Quick Call" 
               detail="+63 991 3938 316" 
-              bg="bg-blue-50"
+              bg="bg-emerald-50"
             />
             <ContactInfoIcon 
-              icon={<Mail className="text-indigo-600" size={24} />} 
+              icon={<Mail className="text-emerald-600" size={24} />} 
               title="Email Support" 
               detail="support@greenhills.com" 
-              bg="bg-indigo-50"
+              bg="bg-emerald-50"
             />
             <ContactInfoIcon 
-              icon={<MapPin className="text-red-600" size={24} />} 
+              icon={<MapPin className="text-emerald-600" size={24} />} 
               title="Main Office" 
               detail="Greenhills Center, San Juan, Manila" 
-              bg="bg-red-50"
+              bg="bg-emerald-50"
             />
 
             {/* Business Hours Mini-Card */}
-            <div className="p-8 bg-slate-900 rounded-[2rem] text-white overflow-hidden relative group">
+            <div className="p-8 bg-emerald-950 rounded-[2rem] text-white overflow-hidden relative group shadow-xl shadow-emerald-100/50">
               <div className="relative z-10">
-                <h4 className="font-bold text-xl mb-2">Store Hours</h4>
-                <p className="text-slate-400 text-sm">Mon - Fri: 9:00 AM - 8:00 PM</p>
-                <p className="text-slate-400 text-sm">Sat - Sun: 10:00 AM - 6:00 PM</p>
+                <h4 className="font-bold text-xl mb-2 text-emerald-400">Store Hours</h4>
+                <p className="text-emerald-100/70 text-sm">Mon - Fri: 9:00 AM - 8:00 PM</p>
+                <p className="text-emerald-100/70 text-sm">Sat - Sun: 10:00 AM - 6:00 PM</p>
               </div>
-              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500 text-emerald-500">
                 <CheckCircle size={120} />
               </div>
             </div>
@@ -119,7 +120,7 @@ const Contact = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 md:p-12 shadow-2xl shadow-blue-100/50 border border-gray-100 order-1 lg:order-2"
+            className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 md:p-12 shadow-2xl shadow-emerald-100/30 border border-gray-50 order-1 lg:order-2"
           >
             <AnimatePresence mode="wait">
               {submitted ? (
@@ -130,8 +131,8 @@ const Contact = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="h-full flex flex-col items-center justify-center text-center py-10 md:py-20"
                 >
-                  <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                    <CheckCircle size={48} className="text-green-500" />
+                  <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle size={48} className="text-emerald-600" />
                   </div>
                   <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">Message Received!</h2>
                   <p className="text-gray-500 text-lg max-w-sm mx-auto">
@@ -139,7 +140,7 @@ const Contact = () => {
                   </p>
                   <button 
                     onClick={() => setSubmitted(false)}
-                    className="mt-8 text-blue-600 font-bold hover:underline"
+                    className="mt-8 text-emerald-600 font-bold hover:text-emerald-700 transition"
                   >
                     Send another message
                   </button>
@@ -155,7 +156,7 @@ const Contact = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all duration-300" 
+                        className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all duration-300" 
                         placeholder="Ex. Juan Dela Cruz" 
                       />
                     </div>
@@ -167,7 +168,7 @@ const Contact = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all duration-300" 
+                        className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all duration-300" 
                         placeholder="juan@example.com" 
                       />
                     </div>
@@ -181,7 +182,7 @@ const Contact = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all duration-300" 
+                      className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all duration-300" 
                       placeholder="What is this regarding?" 
                     />
                   </div>
@@ -194,7 +195,7 @@ const Contact = () => {
                       value={formData.message}
                       onChange={handleChange}
                       rows="5" 
-                      className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all duration-300 resize-none" 
+                      className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all duration-300 resize-none" 
                       placeholder="Write your message here..."
                     ></textarea>
                   </div>
@@ -203,7 +204,7 @@ const Contact = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={loading}
-                    className="w-full md:w-max px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-600 disabled:bg-slate-400 transition-all flex items-center justify-center gap-3 shadow-xl"
+                    className="w-full md:w-max px-12 py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-700 disabled:bg-emerald-300 transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-100"
                   >
                     {loading ? (
                       <>Processing <Loader2 className="animate-spin" size={20} /></>
@@ -224,9 +225,11 @@ const Contact = () => {
 const ContactInfoIcon = ({ icon, title, detail, bg }) => (
   <motion.div 
     whileHover={{ x: 10 }}
-    className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 flex items-center gap-6 transition-all"
+    className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 flex items-center gap-6 transition-all group"
   >
-    <div className={`p-4 ${bg} rounded-2xl flex-shrink-0`}>{icon}</div>
+    <div className={`p-4 ${bg} rounded-2xl flex-shrink-0 group-hover:bg-emerald-600 transition-colors`}>
+      {React.cloneElement(icon, { className: 'group-hover:text-white transition-colors' })}
+    </div>
     <div className="min-w-0">
       <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">{title}</h4>
       <p className="text-slate-900 font-bold truncate">{detail}</p>

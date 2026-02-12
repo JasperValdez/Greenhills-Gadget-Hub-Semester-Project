@@ -203,7 +203,7 @@ function Products() {
                       to={`/products/${p.id}`}
                       className="w-full bg-slate-900 text-white py-2 md:py-3 rounded-xl md:rounded-2xl text-center text-xs md:text-base font-bold hover:bg-emerald-600 transition-colors shadow-lg shadow-gray-200"
                     >
-                      View Gear
+                      View Product
                     </Link>
                   </div>
                 </motion.div>
