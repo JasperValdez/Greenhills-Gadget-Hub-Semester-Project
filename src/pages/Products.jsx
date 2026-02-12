@@ -22,6 +22,16 @@ function Products() {
   
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
+  const categoryQuery = searchParams.get("category") || ""; // Get category from URL
+
+  // Listen for changes in the URL category (from Footer links)
+  useEffect(() => {
+    if (categoryQuery) {
+      setActiveCategory(categoryQuery);
+    } else {
+      setActiveCategory("All");
+    }
+  }, [categoryQuery]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -57,7 +67,8 @@ function Products() {
 
   const handleFilter = (category) => {
     setActiveCategory(category);
-    if (searchQuery) {
+    // Clear URL params when clicking a category manually to reset the view
+    if (searchQuery || categoryQuery) {
         setSearchParams({});
     }
   };
@@ -128,7 +139,7 @@ function Products() {
       </div>
 
       <div className="max-w-7xl mx-auto px-2 py-10">
-        <AnimatePresence mode="popLayout"> {/* Changed to popLayout for smoother grid transitions */}
+        <AnimatePresence mode="popLayout">
           {filteredProducts.length === 0 ? (
             <motion.div 
               key="no-results"
@@ -150,13 +161,13 @@ function Products() {
                 <motion.div
                   layout
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }} // Removed scale to prevent "ghosting" artifacts
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   key={p.id}
                   className="bg-white rounded-3xl shadow-lg hover:shadow-2xl overflow-hidden transition-all duration-300 border border-gray-100 flex flex-col group"
                 >
-                  <div className="relative overflow-hidden h-52 bg-gray-50"> {/* Added bg-gray-50 placeholder */}
+                  <div className="relative overflow-hidden h-52 bg-gray-50">
                     {p.image_url && (
                       <img
                         src={p.image_url}
